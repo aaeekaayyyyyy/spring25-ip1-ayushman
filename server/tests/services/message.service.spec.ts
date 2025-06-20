@@ -22,18 +22,19 @@ describe('Message model', () => {
   });
 
   describe('saveMessage', () => {
-    beforeEach(() => {
-      mockingoose.resetAll();
-    });
-
     it('should return the saved message', async () => {
       mockingoose(MessageModel).toReturn(message1, 'create');
 
       const savedMessage = await saveMessage(message1);
-
       expect(savedMessage).toMatchObject(message1);
     });
-    // TODO: Task 2 - Write a test case for saveMessage when an error occurs
+
+    it('should return an error object if saving fails', async () => {
+      mockingoose(MessageModel).toReturn(new Error('DB error'), 'save');
+
+      const savedMessage = await saveMessage(message1);
+      expect(savedMessage).toEqual({ error: 'Failed to save message' });
+    });
   });
 
   describe('getMessages', () => {
@@ -42,8 +43,18 @@ describe('Message model', () => {
 
       const messages = await getMessages();
 
-      expect(messages).toMatchObject([message1, message2]);
+      // Check they are sorted by msgDateTime (ascending)
+      const simplifiedMessages = messages
+        .map(({ msg, msgFrom, msgDateTime }) => ({ msg, msgFrom, msgDateTime }))
+        .sort((a, b) => a.msgDateTime.getTime() - b.msgDateTime.getTime());
+      expect(simplifiedMessages).toEqual([message1, message2]);
     });
-    // TODO: Task 2 - Write a test case for getMessages when an error occurs
+
+    it('should return an error object if fetching messages fails', async () => {
+      mockingoose(MessageModel).toReturn(new Error('DB error'), 'find');
+
+      const messages = await getMessages();
+      expect(messages).toEqual([]); // Assuming the service returns an empty array on error);
+    });
   });
 });

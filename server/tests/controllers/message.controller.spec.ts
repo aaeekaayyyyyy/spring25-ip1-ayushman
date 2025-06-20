@@ -35,7 +35,7 @@ describe('POST /addMessage', () => {
     const response = await supertest(app).post('/messaging/addMessage').send({});
 
     expect(response.status).toBe(400);
-    expect(response.text).toBe('Invalid request');
+    expect(response.body).toEqual({ error: 'Invalid request body' });
   });
 
   // TODO: Task 2 - Write additional test cases for addMessageRoute

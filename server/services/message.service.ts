@@ -10,12 +10,28 @@ import { Message, MessageResponse } from '../types/types';
  */
 export const saveMessage = async (message: Message): Promise<MessageResponse> =>
   // TODO: Task 2 - Implement the saveMessage function. Refer to other service files for guidance.
-  ({ error: 'Not implemented' });
+  {
+    try {
+      const newMessage = new MessageModel(message);
+      const savedMessage = await newMessage.save();
+      return savedMessage.toObject();
+    } catch (error) {
+      return { error: 'Failed to save message' };
+    }
+  };
 
 /**
  * Retrieves all messages from the database, sorted by date in ascending order.
  *
  * @returns {Promise<Message[]>} - An array of messages. If an error occurs, an empty array is returned.
  */
-export const getMessages = async (): Promise<Message[]> => [];
-// TODO: Task 2 - Implement the getMessages function
+export const getMessages = async (): Promise<Message[]> =>
+  // TODO: Task 2 - Implement the getMessages function
+  {
+    try {
+      const messages = await MessageModel.find().sort({ msgDateTime: 1 }).exec();
+      return messages.map(msg => msg.toObject());
+    } catch (error) {
+      return [];
+    }
+  };

@@ -10,6 +10,10 @@ import { Request } from 'express';
  */
 export interface Message {
   // TODO: Task 2 - Define the properties of the Message interface
+  _id?: ObjectId;
+  msg: string;
+  msgFrom: string;
+  msgDateTime: Date;
 }
 
 /**

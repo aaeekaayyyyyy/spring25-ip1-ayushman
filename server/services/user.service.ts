@@ -1,5 +1,14 @@
 import UserModel from '../models/users.model';
-import { User, UserCredentials, UserResponse } from '../types/types';
+import { SafeUser, User, UserCredentials, UserResponse } from '../types/types';
+
+/**
+ * Helper to strip password and return a SafeUser
+ */
+const toSafeUser = (user: User): SafeUser => ({
+  username: user.username,
+  dateJoined: user.dateJoined,
+  _id: user._id,
+});
 
 /**
  * Saves a new user to the database.
@@ -9,7 +18,18 @@ import { User, UserCredentials, UserResponse } from '../types/types';
  */
 export const saveUser = async (user: User): Promise<UserResponse> =>
   // TODO: Task 1 - Implement the saveUser function. Refer to other service files for guidance.
-  ({ error: 'Not implemented' });
+  {
+    try {
+      const existing = await UserModel.findOne({ username: user.username });
+      if (existing) return { error: 'Username already exists' };
+
+      const newUser = new UserModel(user);
+      const saved = await newUser.save();
+      return toSafeUser(saved.toObject());
+    } catch (err) {
+      return { error: 'Failed to save user' };
+    }
+  };
 
 /**
  * Retrieves a user from the database by their username.
@@ -19,7 +39,15 @@ export const saveUser = async (user: User): Promise<UserResponse> =>
  */
 export const getUserByUsername = async (username: string): Promise<UserResponse> =>
   // TODO: Task 1 - Implement the getUserByUsername function. Refer to other service files for guidance.
-  ({ error: 'Not implemented' });
+  {
+    try {
+      const user = await UserModel.findOne({ username }).exec();
+      if (!user) return { error: 'User not found' };
+      return toSafeUser(user.toObject());
+    } catch (err) {
+      return { error: 'Error retrieving user' };
+    }
+  };
 
 /**
  * Authenticates a user by verifying their username and password.
@@ -29,7 +57,20 @@ export const getUserByUsername = async (username: string): Promise<UserResponse>
  */
 export const loginUser = async (loginCredentials: UserCredentials): Promise<UserResponse> =>
   // TODO: Task 1 - Implement the loginUser function. Refer to other service files for guidance.
-  ({ error: 'Not implemented' });
+  {
+    try {
+      const user = await UserModel.findOne({ username: loginCredentials.username }).exec();
+      if (!user) return { error: 'Invalid username or password' };
+
+      if (user.password !== loginCredentials.password) {
+        return { error: 'Invalid username or password' };
+      }
+
+      return toSafeUser(user.toObject());
+    } catch (err) {
+      return { error: 'Login failed' };
+    }
+  };
 
 /**
  * Deletes a user from the database by their username.
@@ -39,7 +80,15 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
  */
 export const deleteUserByUsername = async (username: string): Promise<UserResponse> =>
   // TODO: Task 1 - Implement the deleteUserByUsername function. Refer to other service files for guidance.
-  ({ error: 'Not implemented' });
+  {
+    try {
+      const user = await UserModel.findOneAndDelete({ username }).exec();
+      if (!user) return { error: 'User not found' };
+      return toSafeUser(user.toObject());
+    } catch (err) {
+      return { error: 'Failed to delete user' };
+    }
+  };
 
 /**
  * Updates user information in the database.
@@ -50,4 +99,17 @@ export const deleteUserByUsername = async (username: string): Promise<UserRespon
  */
 export const updateUser = async (username: string, updates: Partial<User>): Promise<UserResponse> =>
   // TODO: Task 1 - Implement the updateUser function. Refer to other service files for guidance.
-  ({ error: 'Not implemented' });
+  {
+    try {
+      const updated = await UserModel.findOneAndUpdate(
+        { username },
+        { $set: updates },
+        { new: true },
+      ).exec();
+
+      if (!updated) return { error: 'User not found' };
+      return toSafeUser(updated.toObject());
+    } catch (err) {
+      return { error: 'Failed to update user' };
+    }
+  };

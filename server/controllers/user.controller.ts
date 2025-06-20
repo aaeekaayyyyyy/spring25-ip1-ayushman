@@ -16,8 +16,17 @@ const userController = () => {
    * @param req The incoming request containing user data.
    * @returns `true` if the body contains valid user fields; otherwise, `false`.
    */
-  const isUserBodyValid = (req: UserRequest): boolean => false;
-  // TODO: Task 1 - Implement the isUserBodyValid function
+  const isUserBodyValid = (req: UserRequest): boolean =>
+    // TODO: Task 1 - Implement the isUserBodyValid function
+    {
+      const { username, password } = req.body;
+      return (
+        typeof username === 'string' &&
+        typeof password === 'string' &&
+        username.length > 0 &&
+        password.length > 0
+      );
+    };
 
   /**
    * Handles the creation of a new user account.
@@ -27,7 +36,23 @@ const userController = () => {
    */
   const createUser = async (req: UserRequest, res: Response): Promise<void> => {
     // TODO: Task 1 - Implement the createUser function
-    res.status(501).send('Not implemented');
+    if (!isUserBodyValid(req)) {
+      res.status(400).json({ error: 'Username and password are required' });
+      return;
+    }
+
+    const user: User = {
+      username: req.body.username,
+      password: req.body.password,
+      dateJoined: new Date(),
+    };
+
+    const result = await saveUser(user);
+    if ('error' in result) {
+      res.status(400).json(result);
+    } else {
+      res.status(201).json(result);
+    }
   };
 
   /**
@@ -38,7 +63,22 @@ const userController = () => {
    */
   const userLogin = async (req: UserRequest, res: Response): Promise<void> => {
     // TODO: Task 1 - Implement the userLogin function
-    res.status(501).send('Not implemented');
+    if (!isUserBodyValid(req)) {
+      res.status(400).json({ error: 'Username and password are required' });
+      return;
+    }
+
+    const credentials: UserCredentials = {
+      username: req.body.username,
+      password: req.body.password,
+    };
+
+    const result = await loginUser(credentials);
+    if ('error' in result) {
+      res.status(401).json(result);
+    } else {
+      res.status(200).json(result);
+    }
   };
 
   /**
@@ -49,7 +89,13 @@ const userController = () => {
    */
   const getUser = async (req: UserByUsernameRequest, res: Response): Promise<void> => {
     // TODO: Task 1 - Implement the getUser function
-    res.status(501).send('Not implemented');
+    const { username } = req.params;
+    const result = await getUserByUsername(username);
+    if ('error' in result) {
+      res.status(404).json(result);
+    } else {
+      res.status(200).json(result);
+    }
   };
 
   /**
@@ -60,7 +106,13 @@ const userController = () => {
    */
   const deleteUser = async (req: UserByUsernameRequest, res: Response): Promise<void> => {
     // TODO: Task 1 - Implement the deleteUser function
-    res.status(501).send('Not implemented');
+    const { username } = req.params;
+    const result = await deleteUserByUsername(username);
+    if ('error' in result) {
+      res.status(404).json(result);
+    } else {
+      res.status(200).json(result);
+    }
   };
 
   /**
@@ -71,11 +123,27 @@ const userController = () => {
    */
   const resetPassword = async (req: UserRequest, res: Response): Promise<void> => {
     // TODO: Task 1 - Implement the resetPassword function
-    res.status(501).send('Not implemented');
+    const { username, password } = req.body;
+    if (!username || !password) {
+      res.status(400).json({ error: 'Username and new password are required' });
+      return;
+    }
+
+    const result = await updateUser(username, { password });
+    if ('error' in result) {
+      res.status(404).json(result);
+    } else {
+      res.status(200).json(result);
+    }
   };
 
   // Define routes for the user-related operations.
   // TODO: Task 1 - Add appropriate HTTP verbs and endpoints to the router
+  router.post('/signup', createUser); // POST /signup → Create user
+  router.post('/login', userLogin); // POST /login → Login
+  router.get('/getUser/:username', getUser); // GET /getUser/:username → Get user
+  router.delete('/deleteUser/:username', deleteUser); // DELETE /deleteUser/:username → Delete user
+  router.patch('/resetPassword', resetPassword); // PATCH /resetPassword → Reset password
 
   return router;
 };
