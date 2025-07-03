@@ -20,7 +20,7 @@ export const saveUser = async (user: User): Promise<UserResponse> =>
   // TODO: Task 1 - Implement the saveUser function. Refer to other service files for guidance.
   {
     try {
-      const existing = await UserModel.findOne({ username: user.username });
+      const existing = await UserModel.findOne({ username: user.username }).select('-password');
       if (existing) return { error: 'Username already exists' };
 
       const newUser = new UserModel(user);
@@ -41,7 +41,7 @@ export const getUserByUsername = async (username: string): Promise<UserResponse>
   // TODO: Task 1 - Implement the getUserByUsername function. Refer to other service files for guidance.
   {
     try {
-      const user = await UserModel.findOne({ username }).exec();
+      const user = await UserModel.findOne({ username }).select('-password').exec();
       if (!user) return { error: 'User not found' };
       return toSafeUser(user.toObject());
     } catch (err) {
@@ -59,7 +59,9 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
   // TODO: Task 1 - Implement the loginUser function. Refer to other service files for guidance.
   {
     try {
-      const user = await UserModel.findOne({ username: loginCredentials.username }).exec();
+      const user = await UserModel.findOne({ username: loginCredentials.username })
+        .select('-password')
+        .exec();
       if (!user) return { error: 'Invalid username or password' };
 
       if (user.password !== loginCredentials.password) {

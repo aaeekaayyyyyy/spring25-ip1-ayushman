@@ -33,10 +33,7 @@ export interface User extends UserCredentials {
  */
 export interface UserRequest extends Request {
   // TODO: Task 1 - Define the properties of the UserRequest interface
-  body: {
-    username: string;
-    password: string;
-  };
+  body: UserCredentials;
 }
 
 /**
